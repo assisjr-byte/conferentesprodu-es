@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Conferência - Produção Portuária</title>
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #334155;
+            --border-color: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 1.05rem;
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #eff6ff;
+            padding-bottom: 6px;
+        }
+
+        /* Painel Interligado de Produção do Dia */
+        .live-panel-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .live-box {
+            background: #f1f5f9;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .live-box-info strong {
+            display: block;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .live-box-info span {
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        .live-box-val {
+            text-align: right;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        /* Formulário e Filtros */
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            background: #fff;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        button:active {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #64748b;
+            margin-top: 8px;
+        }
+
+        /* Tabela */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #94a3b8;
+            padding: 15px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚢 Sistema de Conferência - Produção Portuária</h1>
+
+    <!-- PAINEL INTERLIGADO DE HOJE -->
+    <div class="card">
+        <h2>📊 Acompanhamento de Hoje (Com Dia, Berço, Período e Terno)</h2>
+        <div id="painelInterligado" class="live-panel-container">
+            <div class="no-data">Nenhuma produção lançada para hoje ainda.</div>
+        </div>
+    </div>
+
+    <!-- TELA DE LANÇAMENTO -->
+    <div class="card">
+        <h2>📝 Novo Lançamento</h2>
+        <form id="prodForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="data" required>
+                </div>
+                <div class="form-group">
+                    <label>Berço</label>
+                    <select id="berco" required>
+                        <option value="99">Berço 99</option>
+                        <option value="100">Berço 100</option>
+                        <option value="101">Berço 101</option>
+                        <option value="102">Berço 102</option>
+                        <option value="103">Berço 103</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Navio</label>
+                <input type="text" id="navio" placeholder="Nome do navio" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Período</label>
+                    <select id="periodo" required>
+                        <option value="08:00 às 14:00">08:00 às 14:00</option>
+                        <option value="14:00 às 20:00">14:00 às 20:00</option>
+                        <option value="20:00 às 02:00">20:00 às 02:00</option>
+                        <option value="02:00 às 08:00">02:00 às 08:00</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Terno</label>
+                    <select id="terno" required>
+                        <option value="1º Terno">1º Terno</option>
+                        <option value="2º Terno">2º Terno</option>
+                        <option value="3º Terno">3º Terno</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Qtd Volumes</label>
+                    <input type="number" id="volumes" placeholder="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Tonelagem (t)</label>
+                    <input type="number" step="0.01" id="tonelagem" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <button type="submit">Salvar no Banco de Dados</button>
+        </form>
+    </div>
+
+    <!-- CONSULTA / HISTÓRICO COM FILTROS -->
+    <div class="card">
+        <h2>🔍 Consultar Histórico de Produção</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Filtrar por Data</label>
+                <input type="date" id="filtroData">
+            </div>
+            <div class="form-group">
+                <label>Filtrar por Período</label>
+                <select id="filtroPeriodo">
+                    <option value="TODOS">Todos os Períodos</option>
+                    <option value="08:00 às 14:00">08:00 às 14:00</option>
+                    <option value="14:00 às 20:00">14:00 às 20:00</option>
+                    <option value="20:00 às 02:00">20:00 às 02:00</option>
+                    <option value="02:00 às 08:00">02:00 às 08:00</option>
+                </select>
+            </div>
+        </div>
+        <button type="button" class="btn-secondary" onclick="filtrarHistorico()">Aplicar Filtro</button>
+
+        <h3 style="font-size: 0.95rem; margin-top: 15px; color: #475569;">Resultados da Consulta:</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Berço</th>
+                        <th>Navio</th>
+                        <th>Período</th>
+                        <th>Terno</th>
+                        <th>Vol.</th>
+                        <th>Ton.</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaCorpo">
+                    <tr><td colspan="7" class="no-data">Nenhum registro encontrado.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const hojeStr = new Date().toISOString().split('T')[0];
+    document.getElementById('data').value = hojeStr;
+    document.getElementById('filtroData').value = hojeStr;
+
+    let lancamentos = JSON.parse(localStorage.getItem('banco_producao_porto')) || [];
+
+    function atualizarPainelEUAcompanhamento() {
+        const painel = document.getElementById('painelInterligado');
+        painel.innerHTML = '';
+
+        let lancamentosHoje = lancamentos.filter(item => item.data === hojeStr);
+
+        if (lancamentosHoje.length === 0) {
+            painel.innerHTML = `<div class="no-data">Nenhuma produção lançada para hoje ainda.</div>`;
+        } else {
+            // Agrupar por Data + Berço + Período + Terno
+            let agrupado = {};
+            lancamentosHoje.forEach(item => {
+                let chave = `${item.data}|${item.berco}|${item.periodo}|${item.terno}`;
+                if (!agrupado[chave]) {
+                    agrupado[chave] = { data: item.data, berco: item.berco, periodo: item.periodo, terno: item.terno, navio: item.navio, volumes: 0, tonelagem: 0 };
+                }
+                agrupado[chave].volumes += parseInt(item.volumes) || 0;
+                agrupado[chave].tonelagem += parseFloat(item.tonelagem) || 0;
+                agrupado[chave].navio = item.navio;
+            });
+
+            Object.values(agrupado).forEach(grupo => {
+                let [ano, mes, dia] = grupo.data.split('-');
+                let dataFormatada = `${dia}/${mes}/${ano}`;
+
+                let box = document.createElement('div');
+                box.className = 'live-box';
+                box.innerHTML = `
+                    <div class="live-box-info">
+                        <strong>📅 ${dataFormatada} — Berço ${grupo.berco} — ${grupo.terno}</strong>
+                        <span>Navio: ${grupo.navio} | Período: ${grupo.periodo.replace(' às ', '-')}</span>
+                    </div>
+                    <div class="live-box-val">
+                        ${grupo.tonelagem.toLocaleString('pt-BR', {minimumFractionDigits: 2})} t<br>
+                        <span style="font-size:0.75rem; color:#64748b;">(${grupo.volumes} vol)</span>
+                    </div>
+                `;
+                painel.appendChild(box);
+            });
+        }
+
+        filtrarHistorico();
+    }
+
+    function filtrarHistorico() {
+        const dataFiltro = document.getElementById('filtroData').value;
+        const periodoFiltro = document.getElementById('filtroPeriodo').value;
+        const corpoTabela = document.getElementById('tabelaCorpo');
+        
+        corpoTabela.innerHTML = '';
+
+        let filtrados = lancamentos.filter(item => {
+            let matchData = dataFiltro ? item.data === dataFiltro : true;
+            let matchPeriodo = periodoFiltro !== "TODOS" ? item.periodo === periodoFiltro : true;
+            return matchData && matchPeriodo;
+        });
+
+        if (filtrados.length === 0) {
+            corpoTabela.innerHTML = `<tr><td colspan="7" class="no-data">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>`;
+        } else {
+            filtrados.forEach((item) => {
+                let tonNum = parseFloat(item.tonelagem) || 0;
+                let [ano, mes, dia] = item.data.split('-');
+                let dataFormatada = `${dia}/${mes}/${ano}`;
+
+                let linha = `<tr>
+                    <td>${dataFormatada}</td>
+                    <td><b>B${item.berco}</b></td>
+                    <td>${item.navio}</td>
+                    <td>${item.periodo.replace(' às ', '-')}</td>
+                    <td>${item.terno.replace(' Terno', '')}</td>
+                    <td>${item.volumes}</td>
+                    <td>${tonNum.toLocaleString('pt-BR', {minimumFractionDigits: 2})} t</td>
+                </tr>`;
+                corpoTabela.innerHTML += linha;
+            });
+        }
+    }
+
+    document.getElementById('prodForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const novoLancamento = {
+            data: document.getElementById('data').value,
+            berco: document.getElementById('berco').value,
+            navio: document.getElementById('navio').value.toUpperCase(),
+            periodo: document.getElementById('periodo').value,
+            terno: document.getElementById('terno').value,
+            volumes: document.getElementById('volumes').value,
+            tonelagem: document.getElementById('tonelagem').value
+        };
+
+        lancamentos.push(novoLancamento);
+        localStorage.setItem('banco_producao_porto', JSON.stringify(lancamentos));
+
+        document.getElementById('filtroData').value = novoLancamento.data;
+        document.getElementById('filtroPeriodo').value = novoLancamento.periodo;
+
+        atualizarPainelEUAcompanhamento();
+
+        document.getElementById('navio').value = '';
+        document.getElementById('volumes').value = '';
+        document.getElementById('tonelagem').value = '';
+        document.getElementById('navio').focus();
+    });
+
+    atualizarPainelEUAcompanhamento();
+</script>
+
+</body>
+</html>
