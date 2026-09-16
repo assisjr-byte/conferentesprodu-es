@@ -142,6 +142,18 @@
             margin-top: 8px;
         }
 
+        .btn-unlock {
+            background-color: #059669;
+            margin-top: 5px;
+        }
+
+        .locked-msg {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+
         /* Tabela */
         .table-responsive {
             overflow-x: auto;
@@ -185,10 +197,26 @@
         </div>
     </div>
 
-    <!-- TELA DE LANÇAMENTO -->
-    <div class="card">
-        <h2>📝 Novo Lançamento</h2>
-        <form id="prodForm">
+    <!-- TELA DE LANÇAMENTO (PROTEGIDA POR SENHA) -->
+    <div class="card" id="cardLancamento">
+        <h2>🔒 Área de Lançamento (Restrita)</h2>
+        
+        <!-- Tela de login com campo tipo password para ocultar os dígitos -->
+        <div id="divLogin">
+            <p class="locked-msg">Insira a senha de conferente para liberar o formulário de lançamento.</p>
+            <div class="form-group">
+                <input type="password" id="senhaInput" placeholder="Digite sua senha secreta">
+            </div>
+            <button type="button" class="btn-unlock" onclick="verificarSenha()">Desbloquear Lançamento</button>
+        </div>
+
+        <!-- Formulário real (fica oculto até digitar a senha certa) -->
+        <form id="prodForm" style="display: none; margin-top: 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="color: #059669; font-size: 0.85rem; font-weight: bold;">✔ Acesso Liberado</span>
+                <button type="button" onclick="bloquearNovamente()" style="width: auto; padding: 4px 10px; font-size: 0.75rem; background-color: #64748b; margin:0;">Bloquear</button>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label>Data</label>
@@ -242,13 +270,13 @@
                 </div>
             </div>
 
-            <button type="submit">Salvar no Banco de Dados</button>
+            <button type="submit">Salvar Produção</button>
         </form>
     </div>
 
-    <!-- CONSULTA / HISTÓRICO COM FILTROS -->
+    <!-- CONSULTA / HISTÓRICO (LIVRE PARA TODOS) -->
     <div class="card">
-        <h2>🔍 Consultar Histórico de Produção</h2>
+        <h2>🔍 Consultar Histórico de Produção (Público)</h2>
         
         <div class="form-row">
             <div class="form-group">
@@ -291,11 +319,30 @@
 </div>
 
 <script>
+    // Senha padrão (mude aqui se quiser definir outra senha secreta)
+    const SENHA_MESTRE = "1234";
+
     const hojeStr = new Date().toISOString().split('T')[0];
     document.getElementById('data').value = hojeStr;
     document.getElementById('filtroData').value = hojeStr;
 
     let lancamentos = JSON.parse(localStorage.getItem('banco_producao_porto')) || [];
+
+    function verificarSenha() {
+        const digitada = document.getElementById('senhaInput').value;
+        if (digitada === SENHA_MESTRE) {
+            document.getElementById('divLogin').style.display = 'none';
+            document.getElementById('prodForm').style.display = 'block';
+            document.getElementById('senhaInput').value = '';
+        } else {
+            alert('Senha incorreta!');
+        }
+    }
+
+    function bloquearNovamente() {
+        document.getElementById('prodForm').style.display = 'none';
+        document.getElementById('divLogin').style.display = 'block';
+    }
 
     function atualizarPainelEUAcompanhamento() {
         const painel = document.getElementById('painelInterligado');
@@ -306,7 +353,6 @@
         if (lancamentosHoje.length === 0) {
             painel.innerHTML = `<div class="no-data">Nenhuma produção lançada para hoje ainda.</div>`;
         } else {
-            // Agrupar por Data + Berço + Período + Terno
             let agrupado = {};
             lancamentosHoje.forEach(item => {
                 let chave = `${item.data}|${item.berco}|${item.periodo}|${item.terno}`;
